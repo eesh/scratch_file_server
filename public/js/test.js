@@ -23,7 +23,6 @@ let classifyRequestState = REQUEST_STATE.IDLE;
 class Scratch3Twitter {
     constructor (runtime) {
         this.runtime = runtime;
-
     }
 
     getInfo () {
