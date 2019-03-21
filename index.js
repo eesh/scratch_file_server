@@ -11,11 +11,15 @@ app.set('view engine', 'handlebars');
 
 const fs = require('fs');
 
-app.get("/extension", (req, res) => {
+app.get("/extension/:apikey/:modelid", (req, res) => {
+    var apikey = req.params.apikey;
+    var model_id = req.params.modelid;
+
     res.contentType('application/javascript');
     res.charset = 'UTF-8';
     res.render('extension', {
-      apikey: 'oudhfiosdf'
+      CLARIFAI_KEY: apikey,
+      MODEL_ID: model_id
     });
 });
 
