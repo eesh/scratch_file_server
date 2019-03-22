@@ -256,12 +256,12 @@ class Scratch3TextClassify {
         const _this = this;
         let promise = new Promise((resolve)=>{
         this.makeTrainingCall(phrase,
-            function(err, response) {
-            if (err){
-                console.log(err);
+            function(response) {
+            if (response == null){
+                console.log('Error in Training');
             }
             else {
-                result = 'Text Data Sent';
+                let result = 'Text Data Sent';
                 _this._lastResult = result;
                 resolve(result);
             }});
@@ -279,16 +279,24 @@ class Scratch3TextClassify {
             write_token: write_api
         });
 
-        nets({
-            url: base_url + "/addExamples",
+        var url = new URL(base_url + "/addExamples",);
+        var options = {
+            method : 'POST',
             headers: {
-              'Content-Type': 'application/json' // important header to be included henceforth
-            }, // couldn't figure out how to get x-url-encoded content-type to work
-            method: 'POST',
-            body: formData,
-            encoding: undefined // This is important to get response as a string otherwise it returns a buffer array
-          }, function(err, response){
-                callback(err, response);
+                'Content-Type': 'application/json' // important header to be included henceforth
+            },
+            body: formData
+        };
+
+        fetch(url, options).then((response) => {
+            if (response.status === 200) {
+                callback('success');
+            }
+            else {
+                callback(null);
+            }
+        }).catch((err) => {
+            callback(null);
         });
 
     }
