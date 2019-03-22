@@ -167,13 +167,32 @@ class Scratch3TextClassify {
         this._lastPhrase = phrase;
         const _this = this;
         let promise = new Promise((resolve)=>{
-        this.makeClassifyCall(phrase,
-            function(err, response) {
-            if (err){
-                console.log(err);
-            }
-            else {
-                console.log(response);
+            resolve(this.makeClassifyCall(phrase));
+        });
+        promise.then(output => output);
+
+        return promise;
+    }
+
+    makeClassifyCall(phrase){
+        var formData = { 
+            classifier_id: classifier_name,
+            classify_username: username,
+            phrase: phrase,
+            token: read_api
+        };
+        var url = new URL(base_url + "/classify/");
+        var options = {
+            method : 'POST',
+            headers: {
+                'Content-Type': 'application/json' // important header to be included henceforth
+            },
+            body: formData
+        };
+
+        return fetch(url, options)
+        .then((response) => {
+            if (response.status === 200) {
                 resp_result = JSON.parse(response.body, null, 2);
                 results = {};
                 //store everything
@@ -193,33 +212,16 @@ class Scratch3TextClassify {
                 }
                 console.log(results);
                 label = class_label;
-                _this._lastResult = label;
-                resolve(label);
-            }});
-        });
-        promise.then(output => output);
-
-        return promise;
-    }
-
-    makeClassifyCall(phrase, callback){
-        var formData = JSON.stringify({ 
-            classifier_id: classifier_name,
-            classify_username: username,
-            phrase: phrase,
-            token: read_api
-        });
-
-        nets({
-            url: base_url + "/classify/",
-            headers: {
-              'Content-Type': 'application/json' // important header to be included henceforth
-            }, // couldn't figure out how to get x-url-encoded content-type to work
-            method: 'POST',
-            body: formData,
-            encoding: undefined // This is important to get response as a string otherwise it returns a buffer array
-          }, function(err, response){
-                callback(err, response);
+            }
+            else {
+                console.log(response);
+            }
+        })
+        .then(() => {
+            return label;
+        })
+        .catch((err) => {
+            return 'error predicting';
         });
     }
 
