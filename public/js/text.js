@@ -10,14 +10,14 @@ let class_name; //name of class that goes w/ the classifier
 let results; //stores all results and probability
 let label; //result with the highest probability
 
-class Scratch3TextClassify {
+class WebTextClassify {
     constructor (runtime) {
         this.runtime = runtime;
     }
 
     getInfo () {
         return {
-            id: 'text',
+            id: 'textWeb',
             name: 'Text Training',
             blockIconURI: iconURI,
             blocks: [
@@ -324,6 +324,6 @@ class Scratch3TextClassify {
         }
     }
 }
-// module.exports = Scratch3TextClassify;
-Scratch.extensions.register(new Scratch3TextClassify());
+
+Scratch.extensions.register(new WebTextClassify());
 
