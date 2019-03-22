@@ -168,37 +168,21 @@ class Scratch3TextClassify {
         const _this = this;
         let promise = new Promise((resolve)=>{
             this.makeClassifyCall(phrase,
-                function(response) {
-                if (response.status != 200){
-                    console.log('there was an error');
+                function(resp) {
+                if (resp == null){
+                    console.log('Error');
                 }
                 else {
-                    console.log(response);
-                    resp_result = JSON.parse(response.body, null, 2);
-                    results = {};
-                    //store everything
-                    for (var i = 0, length = resp_result.length; i < length; i++) {
-                        results[resp_result[i].className.toLowerCase()] = resp_result[i].p;
-                    }
-                    //figure out the highest scoring class
-                    var class_label;
-                    var best_score = 0;
-                    for (var key in results) {
-                        if (results.hasOwnProperty(key)) {
-                            if(results[key]>best_score){
-                                best_score = results[key];
-                                class_label = key;
-                            }
-                        }
-                    }
-                    console.log(results);
-                    label = class_label;
+                    label = resp;
                     _this._lastResult = label;
                     resolve(label);
-            }});
+                }});
         });
         promise.then(output => output);
-
+        if(promise == null){
+            return 'error classifying';
+        }
+        
         return promise;
     }
 
@@ -218,9 +202,36 @@ class Scratch3TextClassify {
             body: formData
         };
 
-        fetch(url, options)
-        .then((response) => {
-            callback(response);
+        fetch(url, options).then((response) => {
+            if (response.status === 200) {
+                response.json().then((responseJson) => {
+                    results = {};
+                    console.log(responseJson);
+                    //store everything
+                    for (var i = 0, length = responseJson.length; i < length; i++) {
+                        results[responseJson[i].className.toLowerCase()] = responseJson[i].p;
+                    }
+                    //figure out the highest scoring class
+                    var class_label;
+                    var best_score = 0;
+                    for (var key in results) {
+                        if (results.hasOwnProperty(key)) {
+                            if(results[key]>best_score){
+                                best_score = results[key];
+                                class_label = key;
+                            }
+                        }
+                    }
+                    console.log(results);
+                    label = class_label;
+                    callback(label);
+                });
+            }
+            else {
+                callback(null);
+            }
+        }).catch((err) => {
+            callback(null);
         });
     }
 
