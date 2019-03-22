@@ -148,6 +148,7 @@ class ServerVision {
     }
 
     takePhoto (args, util) {
+        console.log(this.runtime);
         imageData = this.runtime.ioDevices.video.getSnapshot();
         console.log(imageData);
     }
