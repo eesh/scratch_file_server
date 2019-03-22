@@ -2,24 +2,13 @@ var iconURI = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxATEh
 
 let image;
 
-const VideoState = {
-    /** Video turned off. */
-    OFF: 'off',
-
-    /** Video turned on with default y axis mirroring. */
-    ON: 'on',
-
-    /** Video turned on without default y axis mirroring. */
-    ON_FLIPPED: 'on-flipped'
-};
-
 //server info
-let classifyURL = new URL('https://cognimate.me:2635/vision/classify');
-let updateURL = new URL('https://cognimate.me:2635/vision/updateClassifier');
+let classifyURL = 'https://cognimate.me:2635/vision/classify';
+let updateURL = 'https://cognimate.me:2635/vision/updateClassifier';
 
 //classifier_id
-let classifier_id;
-let api_key;
+let classifier_id = '{{MODEL_ID}}';
+let api_key = '{{CLARIFAI_KEY}}';
 
 //for parsing image response
 let watson_response; //the full response
@@ -30,9 +19,7 @@ let image_class; //the highest scoring class returned for an image
 let update_response;
 
 //image that user takes
-let videoElement;
 let imageData;
-let _track;
 
 class Scratch3Vision {
     constructor (runtime) {
@@ -41,124 +28,6 @@ class Scratch3Vision {
          * @type {Runtime}
          */
         this.runtime = runtime;
-
-        /**
-         * The last millisecond epoch timestamp that the video stream was
-         * analyzed.
-         * @type {number}
-         */
-        this._lastUpdate = null;
-        this._lastFrame = undefined;
-
-
-        if (this.runtime.ioDevices) {
-            // Clear target motion state values when the project starts.
-            // this.runtime.on(Runtime.PROJECT_RUN_START, this.reset.bind(this));
-
-            // Kick off looping the analysis logic.
-            this._loop();
-
-            // Configure the video device with values from a globally stored
-            // location.
-            this.setVideoTransparency({
-                TRANSPARENCY: this.globalVideoTransparency
-            });
-            // this.videoToggle({
-            //     VIDEO_STATE: this.globalVideoState
-            // });
-
-            this.videoToggle({
-                VIDEO_STATE: 'off'
-            });
-        }
-    }
-
-    /**
-     * After analyzing a frame the amount of milliseconds until another frame
-     * is analyzed.
-     * @type {number}
-     */
-    static get INTERVAL () {
-        return 33;
-    }
-
-    /**
-     * Dimensions the video stream is analyzed at after its rendered to the
-     * sample canvas.
-     * @type {Array.<number>}
-     */
-    static get DIMENSIONS () {
-        return [480, 360];
-    }
-
-    /**
-     * The transparency setting of the video preview stored in a value
-     * accessible by any object connected to the virtual machine.
-     * @type {number}
-     */
-    get globalVideoTransparency () {
-        const stage = this.runtime.getTargetForStage();
-        if (stage) {
-            return stage.videoTransparency;
-        }
-        return 50;
-    }
-
-    set globalVideoTransparency (transparency) {
-        const stage = this.runtime.getTargetForStage();
-        if (stage) {
-            stage.videoTransparency = transparency;
-        }
-        return transparency;
-    }
-
-    /**
-     * The video state of the video preview stored in a value accessible by any
-     * object connected to the virtual machine.
-     * @type {number}
-     */
-    get globalVideoState () {
-        const stage = this.runtime.getTargetForStage();
-        if (stage) {
-            return stage.videoState;
-        }
-        return VideoState.ON;
-    }
-
-    set globalVideoState (state) {
-        const stage = this.runtime.getTargetForStage();
-        if (stage) {
-            stage.videoState = state;
-        }
-        return state;
-    }
-
-    /**
-     * Occasionally step a loop to sample the video, stamp it to the preview
-     * skin, and add a TypedArray copy of the canvas's pixel data.
-     * @private
-     */
-    _loop () {
-        setTimeout(this._loop.bind(this), Math.max(this.runtime.currentStepTime, Scratch3Watson.INTERVAL));
-
-        // Add frame to detector
-        const time = Date.now();
-        if (this._lastUpdate === null) {
-            this._lastUpdate = time;
-        }
-        const offset = time - this._lastUpdate;
-        if (offset > Scratch3Watson.INTERVAL) {
-            const frame = this.runtime.ioDevices.video.getFrame({
-                format: Video.FORMAT_IMAGE_DATA,
-                dimensions: Scratch3Watson.DIMENSIONS
-            });
-            if (frame) {
-                this._lastUpdate = time;
-                this._lastFrame = frame;
-                // this.detect.addFrame(frame.data);
-            }
-        }
-
     }
 
     /**
@@ -179,61 +48,13 @@ class Scratch3Vision {
         });
     }
 
-    /**
-     * States the video sensing activity can be set to.
-     * @readonly
-     * @enum {string}
-     */
-    static get VideoState () {
-        return VideoState;
-    }
 
-    get VIDEO_STATE_INFO () {
-        return [
-            {
-                name: formatMessage({
-                    id: 'videoSensing.off',
-                    default: 'off',
-                    description: 'Option for the "turn video [STATE]" block'
-                }),
-                value: VideoState.OFF
-            },
-            {
-                name: formatMessage({
-                    id: 'videoSensing.on',
-                    default: 'on',
-                    description: 'Option for the "turn video [STATE]" block'
-                }),
-                value: VideoState.ON
-            },
-            {
-                name: formatMessage({
-                    id: 'videoSensing.onFlipped',
-                    default: 'on flipped',
-                    description: 'Option for the "turn video [STATE]" block that causes the video to be flipped' +
-                        ' horizontally (reversed as in a mirror)'
-                }),
-                value: VideoState.ON_FLIPPED
-            }
-        ];
-    }
     getInfo () {
         return {
-            id: 'vision',
+            id: 'visiontraining',
             name: 'Image Training',
             blockIconURI: iconURI,
             blocks: [
-                {
-                    opcode: 'videoToggle',
-                    text: 'turn video [VIDEO_STATE]',
-                    arguments: {
-                        VIDEO_STATE: {
-                            type: Scratch.ArgumentType.NUMBER,
-                            menu: 'VIDEO_STATE',
-                            defaultValue: VideoState.ON
-                        }
-                    }
-                },
                 {
                     opcode: 'setAPI',
                     blockType: Scratch.BlockType.COMMAND,
@@ -241,7 +62,7 @@ class Scratch3Vision {
                     arguments:{
                         KEY:{
                             type: Scratch.ArgumentType.STRING,
-                            defaultValue: '{{apikey}}'
+                            defaultValue: '{{CLARIFAI_KEY}}'
                         }
                     }
                 },
@@ -253,14 +74,9 @@ class Scratch3Vision {
                     arguments: {
                         IDSTRING: {
                             type: Scratch.ArgumentType.STRING,
-                            defaultValue: 'model id'
+                            defaultValue: '{{MODEL_ID}}'
                         }
                     }
-                },
-                {
-                    opcode: 'takePhoto',
-                    blockType: Scratch.BlockType.COMMAND,
-                    text: 'Take photo from webcam'
                 },
                 {
                     opcode: 'urlPhoto',
@@ -324,8 +140,7 @@ class Scratch3Vision {
 
             ],
             menus: {
-                models: ['Default','RockPaperScissors'],
-                VIDEO_STATE: this._buildMenu(this.VIDEO_STATE_INFO)
+                models: ['Default','RockPaperScissors']
             }
         };
     }
@@ -349,11 +164,6 @@ class Scratch3Vision {
             return 'this is not a valid class'
         }
         return classes[comparison_class];
-    }
-
-    takePhoto (args, util) {
-        imageData = this.runtime.ioDevices.video.getSnapshot();
-        console.log(imageData);
     }
 
     recognizeObjectCommand(args, util){
@@ -515,6 +325,7 @@ class Scratch3Vision {
             return false;
         }
     }
+
     updateClassifier(args, util){
         let category = args.LABEL;
         let promise = new Promise((resolve)=>{
@@ -558,41 +369,12 @@ class Scratch3Vision {
                 }
                 callback(error, null);
             });
-        });
-    }
-
-    videoToggle (args) {
-        const state = args.VIDEO_STATE;
-        this.globalVideoState = state;
-        if (state === VideoState.OFF) {
-            if(videoElement){
-                trackerTask.stop();
-                videoElement.pause();
-                _track.stop();
-                videoElement = null;
-                _track = null;
-            }
-            this.runtime.ioDevices.video.disableVideo();
-        } else {
-            // this._setupVideo();
-            this.runtime.ioDevices.video.enableVideo();
-            // Mirror if state is ON. Do not mirror if state is ON_FLIPPED.
-            this.runtime.ioDevices.video.mirror = state === VideoState.ON;
-        }
-    }
-
-    /**
-     * A scratch command block handle that configures the video preview's
-     * transparency from passed arguments.
-     * @param {object} args - the block arguments
-     * @param {number} args.TRANSPARENCY - the transparency to set the video
-     *   preview to
-     */
-    setVideoTransparency (args) {
-        const transparency = Scratch.Cast.toNumber(args.TRANSPARENCY);
-        this.globalVideoTransparency = transparency;
-        this.runtime.ioDevices.video.setPreviewGhost(transparency);
     }
 }
+
+function toNumber(data) {
+    return Scratch.Cast.toNumber(data);
+}
+
 
 Scratch.extensions.register(new Scratch3Vision());
