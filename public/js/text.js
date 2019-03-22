@@ -168,9 +168,9 @@ class Scratch3TextClassify {
         const _this = this;
         let promise = new Promise((resolve)=>{
             this.makeClassifyCall(phrase,
-                function(err, response) {
-                if (err){
-                    console.log(err);
+                function(response) {
+                if (response.status != 200){
+                    console.log('there was an error');
                 }
                 else {
                     console.log(response);
@@ -219,8 +219,8 @@ class Scratch3TextClassify {
         };
 
         fetch(url, options)
-        .then((err, response) => {
-            callback(err, response);
+        .then((response) => {
+            callback(response);
         });
     }
 
